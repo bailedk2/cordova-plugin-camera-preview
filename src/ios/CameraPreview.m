@@ -81,34 +81,35 @@
 - (void) stopCamera:(CDVInvokedUrlCommand*)command {
     
     NSLog(@"stopCamera");
-    
+    CameraSessionManager *tempManager = self.sessionManager;
     [self.cameraRenderController.view removeFromSuperview];
     [self.cameraRenderController removeFromParentViewController];
     self.cameraRenderController = nil;
     
+    self.sessionManager = nil;
+    
     [self.commandDelegate runInBackground:^{
         
         CDVPluginResult *pluginResult;
-        if(self.sessionManager != nil) {
+        if(tempManager != nil) {
             
-            for(AVCaptureInput *input in self.sessionManager.session.inputs) {
-                [self.sessionManager.session removeInput:input];
+            for(AVCaptureInput *input in tempManager.session.inputs) {
+                [tempManager.session removeInput:input];
             }
             
-            for(AVCaptureOutput *output in self.sessionManager.session.outputs) {
-                [self.sessionManager.session removeOutput:output];
+            for(AVCaptureOutput *output in tempManager.session.outputs) {
+                [tempManager.session removeOutput:output];
             }
             
-            [self.sessionManager.session stopRunning];
-            self.sessionManager = nil;
+            [tempManager.session stopRunning];
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        }else{
+            NSLog(@"Camera not started");
         }
-        else {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Camera not started"];
-        }
-        
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
+    CDVPluginResult *pluginResult;
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void) hideCamera:(CDVInvokedUrlCommand*)command {
